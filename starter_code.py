@@ -1,5 +1,6 @@
 from helpers import *
 from opportunity_dataset import OpportunityDataset
+from sklearn.preprocessing import Imputer
 
 
 def create_io_pairs(inputs, labels):
@@ -7,26 +8,36 @@ def create_io_pairs(inputs, labels):
 	#it just returns the inputs and labels without changing anything.
 	X = inputs
 	Y = labels
-	#...
-	#....
 	return X,Y
 
 
 def impute_data(arr):
 	#Data imputation code goes here!
-	#...
-	#...
+	for x in xrange(arr.shape[1]):
+		col = arr[:,x]
+		not_nan = np.logical_not(np.isnan(col))
+		ind = np.arange(len(col))
+		new_col = np.interp(ind,ind[not_nan],col[not_nan])
+		arr[:,x] = new_col
 	return arr
-
 
 def test_imputation(dataset):
 	#Get the input array on which to perform imputation
 	training_data, testing_data = dataset.leave_subject_out(left_out = ["S2", "S3", "S4"])
 	X_train, Y_train = create_dataset(training_data, dataset.data_map["AccelWristSensors"], dataset.locomotion_labels["idx"])
 	arr = X_train
+	print arr.shape
 	out = impute_data(arr)		
 	baseline = np.load("imputed_data.npy")
-	return np.sum( (out - baseline)**2 )
+
+	count = 1
+	while(X_train[count, 0] > 0):
+		count += 1
+
+	print count
+	#Only compute the sum for the first ADL run
+	return np.sum( (out[:count, :] - baseline[:count, :])**2 )
+	# return np.sum( (out - baseline)**2 )
 
 
 def train(X, Y):
@@ -90,7 +101,12 @@ if __name__ == "__main__":
 	sensors = dataset.data_map["AccelWristSensors"]
 	
 	#Locomotion labels
-	cv_train_test(dataset, sensors, dataset.locomotion_labels)
+	# cv_train_test(dataset, sensors, dataset.locomotion_labels)
 
 	#Activity labels
-	cv_train_test(dataset, sensors, dataset.activity_labels)
+	# cv_train_test(dataset, sensors, dataset.activity_labels)
+	part1 = impute_data(dataset.subject_data["S3"][2])
+	np.save("part1.npy",part1)
+	# part1 = np.load("part1.npy")
+	# print part1
+	print test_imputation(dataset)
