@@ -20,24 +20,67 @@ def create_io_pairs(inputs, labels):
 	#print Y
 	#exit(0)
 	#....
-	return X,Y
+	return np.array(X),np.array(Y)
 
+def nan_helper(y):
+	print y.shape
+	return np.isnan(y)
 
 def impute_data(arr):
 	#Data imputation code goes here!
 	#...
 	#...
-	return Imputer(verbose = 9).fit_transform(arr)
+	# n = arr.shape[0]
+	# c1 = range(n)
+	#c1_ori = arr[:,0]
+	# print c1_ori.shape
+	# arr[:,0] = c1
+	# print arr
+	#imputed = Imputer(strategy = 'median').fit_transform(arr)
+	n1 = arr.shape[0]
+	n2 = arr.shape[1]
+	n1_r = np.array(range(n1))
+	op = np.reshape(arr[:,0],(-1,1))
+	for i in range(1,n2):
+		y = arr[:,i]
+		nans= nan_helper(y)
+
+		y[nans]= np.interp(n1_r[nans], n1_r[~nans], y[~nans])
+		y = np.reshape(y,(-1,1))
+		op = np.hstack((op,y))
+
+	return op
 
 
 def test_imputation(dataset):
+	# #Get the input array on which to perform imputation
+	# training_data, testing_data = dataset.leave_subject_out(left_out = ["S2", "S3", "S4"])
+	# X_train, Y_train = create_dataset(training_data, dataset.data_map["AccelWristSensors"], dataset.locomotion_labels["idx"])
+	# arr = X_train
+	# #out = impute_data(arr)
+	# out = impute_data(dataset.subject_data["S3"][2])	
+	# baseline = np.load("imputed_data.npy")
+	# return np.sum( (out - baseline)**2 )
+
 	#Get the input array on which to perform imputation
 	training_data, testing_data = dataset.leave_subject_out(left_out = ["S2", "S3", "S4"])
 	X_train, Y_train = create_dataset(training_data, dataset.data_map["AccelWristSensors"], dataset.locomotion_labels["idx"])
-	arr = X_train
-	out = impute_data(arr)		
+	arr = X_train[:]
+	# out = impute_data(arr)
 	baseline = np.load("imputed_data.npy")
-	return np.sum( (out - baseline)**2 )
+	
+	#Find the index where the first ADL run ends
+	#print out
+	count = 1
+	# print X_train.shape
+	# print out.shape
+	while(X_train[count, 0] > 0):
+		count += 1
+	print count
+	out = impute_data(arr)
+
+	#Only compute the sum for the first ADL run
+	return np.sum( (out[:count, :] - baseline[:count, :])**2 )
 
 
 def train(X, Y):
@@ -99,7 +142,7 @@ if __name__ == "__main__":
 	#these inputs for  problem 2
 	dataset = OpportunityDataset()
 	sensors = dataset.data_map["AccelWristSensors"]
-	
+	print test_imputation(dataset)
 	#Locomotion labels
 	cv_train_test(dataset, sensors, dataset.locomotion_labels)
 
