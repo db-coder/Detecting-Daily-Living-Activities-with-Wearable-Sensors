@@ -1,6 +1,7 @@
 from helpers import *
 from opportunity_dataset import OpportunityDataset
 from scipy import stats
+from sklearn.preprocessing import Imputer
 
 
 def create_io_pairs(inputs, labels):
@@ -26,7 +27,7 @@ def impute_data(arr):
 	#Data imputation code goes here!
 	#...
 	#...
-	return arr
+	return Imputer(verbose = 9).fit_transform(arr)
 
 
 def test_imputation(dataset):
