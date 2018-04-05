@@ -8,8 +8,8 @@ from scipy import stats
 def create_io_pairs(inputs, labels):
 	#Compute your windowed features here and labels. Right now
 	#it just returns the inputs and labels without changing anything.
-	window_size = 1
-	stride = 1
+	window_size = 5
+	stride = 3
 	X = [list(np.average(inputs[i:i+window_size,:],axis=0)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
 	Y = [list((stats.mode(labels[i:i+window_size,:], axis = None)[0]).astype(int)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
 	return np.array(X),np.array(Y)
