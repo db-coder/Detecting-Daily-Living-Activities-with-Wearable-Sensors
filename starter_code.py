@@ -1,14 +1,18 @@
 from helpers import *
 from opportunity_dataset import OpportunityDataset
 from sklearn.preprocessing import Imputer
+from sklearn.ensemble import AdaBoostClassifier
+from scipy import stats
 
 
 def create_io_pairs(inputs, labels):
 	#Compute your windowed features here and labels. Right now
 	#it just returns the inputs and labels without changing anything.
-	X = inputs
-	Y = labels
-	return X,Y
+	window_size = 1
+	stride = 1
+	X = [list(np.average(inputs[i:i+window_size,:],axis=0)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	Y = [list((stats.mode(labels[i:i+window_size,:], axis = None)[0]).astype(int)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	return np.array(X),np.array(Y)
 
 
 def impute_data(arr):
@@ -33,30 +37,25 @@ def test_imputation(dataset):
 	count = 1
 	while(X_train[count, 0] > 0):
 		count += 1
-
-	print count
 	#Only compute the sum for the first ADL run
 	return np.sum( (out[:count, :] - baseline[:count, :])**2 )
 	# return np.sum( (out - baseline)**2 )
 
-
 def train(X, Y):
 	#This is where you train your classifier, right now a dummy 
 	#classifier which uniformly guesses a label is "trained"
-	#....
-	#....
-	model = {"clf": DummyClassifier( len(set(Y.flatten())) ) }
-	#....
-	#....
+	# model = {"clf": DummyClassifier( len(set(Y.flatten())) ) }
+
+	model = AdaBoostClassifier(n_estimators=100)
+	model.fit(X,Y.flatten())
 	return model
 
 
 def test(X, model):
 	#This is where you compute predictions using your trained classifier
 	#...
-	Y = model["clf"].predict(X)
+	Y = model.predict(X)
 	return Y
-
 
 def cv_train_test(dataset, sensors, labels):
 	"""
@@ -98,15 +97,16 @@ if __name__ == "__main__":
 	#Example inputs to cv_train_test function, you would use
 	#these inputs for  problem 2
 	dataset = OpportunityDataset()
-	sensors = dataset.data_map["AccelWristSensors"]
+	sensors = dataset.data_map["ImuWristSensors"]
 	
 	#Locomotion labels
-	# cv_train_test(dataset, sensors, dataset.locomotion_labels)
+	cv_train_test(dataset, sensors, dataset.locomotion_labels)
 
 	#Activity labels
-	# cv_train_test(dataset, sensors, dataset.activity_labels)
-	part1 = impute_data(dataset.subject_data["S3"][2])
-	np.save("part1.npy",part1)
+	cv_train_test(dataset, sensors, dataset.activity_labels)
+
+	# part1 = impute_data(dataset.subject_data["S3"][2])
+	# np.save("part1.npy",part1)
 	# part1 = np.load("part1.npy")
 	# print part1
-	print test_imputation(dataset)
+	# print test_imputation(dataset)
