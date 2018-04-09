@@ -1,7 +1,9 @@
 from helpers import *
 from opportunity_dataset import OpportunityDataset
 from sklearn.preprocessing import Imputer
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from scipy import stats
 
 
@@ -46,7 +48,8 @@ def train(X, Y):
 	#classifier which uniformly guesses a label is "trained"
 	# model = {"clf": DummyClassifier( len(set(Y.flatten())) ) }
 
-	model = AdaBoostClassifier(n_estimators=100)
+	# model = AdaBoostClassifier(n_estimators=100)
+	model = RandomForestClassifier(n_estimators = 50, oob_score = True)
 	model.fit(X,Y.flatten())
 	return model
 
@@ -97,7 +100,9 @@ if __name__ == "__main__":
 	#Example inputs to cv_train_test function, you would use
 	#these inputs for  problem 2
 	dataset = OpportunityDataset()
-	sensors = dataset.data_map["ImuWristSensors"]
+	sensors = dataset.data_map["AccelWristSensors"]
+	# sensors = dataset.data_map["ImuWristSensors"]
+	# sensors = dataset.data_map["FullBodySensors"]
 	
 	#Locomotion labels
 	cv_train_test(dataset, sensors, dataset.locomotion_labels)
