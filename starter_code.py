@@ -47,8 +47,6 @@ def create_io_pairs(inputs, labels):
 		#print op
 		#exit(0)
 
-
-
 	# RP
 	X = [RP(inputs[i:i+window_size,:])for i in range(0,inputs.shape[0]-window_size+1,stride)]
 	
