@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from scipy import stats
+from scipy.fftpack import fftfreq, rfft
 
 
 def create_io_pairs(inputs, labels):
@@ -13,7 +14,45 @@ def create_io_pairs(inputs, labels):
 
 	window_size = 5
 	stride = 3
-	X = [list(np.average(inputs[i:i+window_size,:],axis=0)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	# initial
+	# X = [list(np.average(inputs[i:i+window_size,:],axis=0)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	
+	# # RMS
+	# X = [list(np.sqrt(np.average(inputs[i:i+window_size,:]**2,axis=0))) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	
+	# # SD
+	# X = [list(np.std(inputs[i:i+window_size,:],axis=0)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	
+	# # MAS1
+	# X = [list( np.abs(np.subtract( inputs[i:i+window_size,:],np.average(inputs[i:i+window_size,:],axis=0))) ) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	
+	# # MAS2
+	# X = [list( np.sqrt(np.abs(np.subtract( inputs[i:i+window_size,:],np.average(inputs[i:i+window_size,:],axis=0)))) ) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	
+	def RP(inp):
+		x_fft = rfft(inp,axis = 0)
+		#print x_fft
+		x_fft_sum_square = np.sum(np.abs(x_fft)**2)
+		z1,z2 = np.histogram(x_fft,10)
+		z2[-1] += 0.1
+		op = []
+		for j in range(z1.size):
+			if(z1[j] == 0):
+				op.append(0)
+			else:
+				z_temp = [np.abs(k)**2 if (k>= z2[j] and k < z2[j+1]) else 0 for k in x_fft.flatten() ]
+				#print z_temp
+				op.append(float(np.sum(z_temp))/x_fft_sum_square)
+		return op
+		#print op
+		#exit(0)
+
+
+
+	# RP
+	X = [RP(inputs[i:i+window_size,:])for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	
+
 	Y = [list((stats.mode(labels[i:i+window_size,:], axis = None)[0]).astype(int)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
 
 	return np.array(X),np.array(Y)
