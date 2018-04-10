@@ -12,28 +12,28 @@ def create_io_pairs(inputs, labels):
 	#Compute your windowed features here and labels. Right now
 	#it just returns the inputs and labels without changing anything.
 
-	window_size = 5
-	stride = 3
+	window_size = 15
+	stride = 5
 	# initial
-	# X = [list(np.average(inputs[i:i+window_size,:],axis=0)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	# X = [list(np.average(inputs[i:i+window_size,1:],axis=0)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
 	
 	# # RMS
-	# X = [list(np.sqrt(np.average(inputs[i:i+window_size,:]**2,axis=0))) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	# X = [list(np.sqrt(np.average(inputs[i:i+window_size,1:]**2,axis=0))) for i in range(0,inputs.shape[0]-window_size+1,stride)]
 	
 	# # SD
-	# X = [list(np.std(inputs[i:i+window_size,:],axis=0)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	# X = [list(np.std(inputs[i:i+window_size,1:],axis=0)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
 	
 	# # MAS1
-	# X = [list( np.abs(np.subtract( inputs[i:i+window_size,:],np.average(inputs[i:i+window_size,:],axis=0))) ) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	# X = [list( np.mean(np.abs(np.subtract( inputs[i:i+window_size,1:],np.average(inputs[i:i+window_size,:],axis=0))), axis = 0) ) for i in range(0,inputs.shape[0]-window_size+1,stride)]
 	
 	# # MAS2
-	# X = [list( np.sqrt(np.abs(np.subtract( inputs[i:i+window_size,:],np.average(inputs[i:i+window_size,:],axis=0)))) ) for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	# X = [list( np.sqrt(np.mean(np.abs(np.subtract( inputs[i:i+window_size,1:],np.average(inputs[i:i+window_size,:],axis=0))), axis = 0)) ) for i in range(0,inputs.shape[0]-window_size+1,stride)]
 	
-	def RP(inp):
+	def RP(inp, M = 20):
 		x_fft = rfft(inp,axis = 0)
 		#print x_fft
 		x_fft_sum_square = np.sum(np.abs(x_fft)**2)
-		z1,z2 = np.histogram(x_fft,10)
+		z1,z2 = np.histogram(x_fft,M)
 		z2[-1] += 0.1
 		op = []
 		for j in range(z1.size):
@@ -48,7 +48,7 @@ def create_io_pairs(inputs, labels):
 		#exit(0)
 
 	# RP
-	X = [RP(inputs[i:i+window_size,:])for i in range(0,inputs.shape[0]-window_size+1,stride)]
+	X = [RP(inputs[i:i+window_size,1:])for i in range(0,inputs.shape[0]-window_size+1,stride)]
 	
 
 	Y = [list((stats.mode(labels[i:i+window_size,:], axis = None)[0]).astype(int)) for i in range(0,inputs.shape[0]-window_size+1,stride)]
@@ -175,12 +175,12 @@ if __name__ == "__main__":
 	#Example inputs to cv_train_test function, you would use
 	#these inputs for  problem 2
 	dataset = OpportunityDataset()
-	sensors = dataset.data_map["AccelWristSensors"]
+	#sensors = dataset.data_map["AccelWristSensors"]
 
 	# print test_imputation(dataset)
 
 	# sensors = dataset.data_map["ImuWristSensors"]
-	# sensors = dataset.data_map["FullBodySensors"]
+	sensors = dataset.data_map["FullBodySensors"]
 	
 	#Locomotion labels
 	cv_train_test(dataset, sensors, dataset.locomotion_labels)
